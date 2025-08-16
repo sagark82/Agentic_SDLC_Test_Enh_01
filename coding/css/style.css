@@ -1,0 +1,13 @@
+/* css/style.css */
+body {
+    font-family: sans-serif;
+    padding: 2em;
+}
+nav {
+    margin-bottom: 2em;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 1em;
+}
+.content {
+    max-width: 800px;
+}
