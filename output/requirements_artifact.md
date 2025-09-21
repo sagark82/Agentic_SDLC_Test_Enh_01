@@ -1,77 +1,103 @@
-```markdown
-## User Stories for Patient Enrollment Process
+# User Stories for Patient Enrollment Process
 
-### User Story 1: Secure Patient Enrollment API Endpoint
-
-*   **As the Patient Enrollment Portal,**
-*   **I want to securely submit new patient enrollment forms,**
-*   **so that the patient registration process can be initiated reliably and confidentially.**
-
-**Acceptance Criteria:**
-
-*   **GIVEN** a new patient enrollment form is successfully submitted through the Patient Enrollment Portal (web/mobile).
-*   **WHEN** the form data is sent to the system.
-*   **THEN** the system automatically triggers the patient registration process via an exposed HTTPS REST API endpoint.
-*   **AND** the API endpoint is deployed on CloudHub (or the hospital's private cloud).
-*   **AND** the API validates the incoming request using a JSON Web Token (JWT) for authentication.
-*   **AND** the API decrypts any Protected Health Information (PHI) within the payload using configured encryption before further processing.
-*   **AND** the API validates the incoming JSON payload against its predefined API specification (e.g., RAML/OpenAPI schema) to ensure data structure and type compliance.
+Here are the detailed user stories with acceptance criteria based on the provided high-level requirements:
 
 ---
 
-### User Story 2: Patient Data Mapping and Transformation
+## User Story 1: Patient Enrollment Submission API
 
-*   **As the system,**
-*   **I want to accurately map submitted patient enrollment data to the healthcare database schema,**
-*   **so that patient information is correctly structured for storage.**
+*   **As** the Patient Enrollment Portal,
+*   **I want to** submit new patient enrollment forms via a secure API endpoint,
+*   **So that** new patient records can be automatically created in the healthcare database.
 
-**Acceptance Criteria:**
+### Acceptance Criteria:
 
-*   **GIVEN** a valid, authenticated, and decrypted patient enrollment payload is received by the API.
-*   **WHEN** the system processes the payload.
-*   **THEN** the system transforms the incoming data using DataWeave (or equivalent data transformation tool).
-*   **AND** the `Patient Full Name` field from the enrollment form is mapped to the `patient_name` column in the Patients table.
-*   **AND** a unique system-generated `Patient ID` is created and mapped to the `patient_id` column.
-*   **AND** the `Date of Birth` field is mapped to the `dob` column.
-*   **AND** the `Gender` field is mapped to the `gender` column.
-*   **AND** the `Address` field is mapped to the `address_line1` column.
-*   **AND** the `City` field is mapped to the `city` column.
-*   **AND** the `State/Region` field is mapped to the `state` column.
-*   **AND** the `Postal Code` field is mapped to the `postal_code` column.
-*   **AND** the `Phone Number` field is mapped to the `contact_phone` column.
-*   **AND** the `Insurance Policy Number` field is mapped to the `insurance_id` column.
+*   GIVEN a new patient enrollment form is successfully submitted by the Patient Enrollment Portal
+*   WHEN the portal sends the enrollment data to the API endpoint
+*   THEN the API endpoint must receive the request via HTTPS.
+*   AND the API must validate the incoming request payload against the defined API specification (e.g., RAML/OpenAPI).
+*   AND the API must validate the JWT token provided in the request header for authentication and authorization.
+*   AND the API must decrypt any encrypted Protected Health Information (PHI) fields in the payload for internal processing.
+*   AND the API must return a success response (e.g., HTTP 202 Accepted) if the request is valid and accepted for processing.
+*   AND the API must return an appropriate error response (e.g., HTTP 400 Bad Request, 401 Unauthorized, 403 Forbidden) if the request is invalid, unauthorized, or malformed.
 
 ---
 
-### User Story 3: New Patient Record Insertion
+## User Story 2: New Patient Record Creation
 
-*   **As the system,**
-*   **I want to insert the transformed patient data as a new record into the Patients table,**
-*   **so that new patients are successfully registered in the healthcare database.**
+*   **As** the Healthcare Patient Management System,
+*   **I want to** accurately map and insert new patient enrollment data into the Patients table,
+*   **So that** a complete and correct patient record is created.
 
-**Acceptance Criteria:**
+### Acceptance Criteria:
 
-*   **GIVEN** patient data has been successfully mapped and transformed according to the healthcare database schema.
-*   **WHEN** the system attempts to store the data.
-*   **THEN** a new record containing the mapped data is inserted into the `Patients` table in the target Healthcare Patient DB (PostgreSQL / Oracle Healthcare instance).
-*   **AND** the database connection uses securely stored credentials.
-*   **AND** the insertion operation is performed via a dedicated database connector (e.g., MuleSoft Database Connector).
-*   **AND** upon successful insertion, the process completes without triggering an error notification.
+*   GIVEN a valid and authenticated new patient enrollment request has been successfully received by the API
+*   WHEN the system processes the enrollment data
+*   THEN the system must generate a unique `patient_id` for the new patient.
+*   AND the system must accurately map the following fields from the enrollment form to the `Patients` table:
+    *   Patient Full Name → `patient_name`
+    *   System-generated Patient ID → `patient_id`
+    *   Date of Birth → `dob`
+    *   Gender → `gender`
+    *   Address → `address_line1`
+    *   City → `city`
+    *   State/Region → `state`
+    *   Postal Code → `postal_code`
+    *   Phone Number → `contact_phone`
+    *   Insurance Policy Number → `insurance_id`
+*   AND the system must successfully insert a new record with the mapped data into the `Patients` table in the target database.
+*   AND the system must use securely stored database credentials for the insertion operation.
+*   AND the system must ensure data validation rules for the `Patients` table are met before insertion (e.g., `dob` is a valid date, `gender` adheres to defined values).
 
 ---
 
-### User Story 4: Database Insertion Failure Notification & Logging
+## User Story 3: Failed Patient Record Creation Notification
 
-*   **As the Healthcare IT Support Group,**
-*   **I want to be automatically notified when a patient record insertion fails,**
-*   **so that I can quickly investigate and resolve data integrity issues.**
+*   **As** the Healthcare Patient Management System,
+*   **I want to** log failed patient record insertions and notify IT support,
+*   **So that** operational issues can be promptly identified and resolved.
 
-**Acceptance Criteria:**
+### Acceptance Criteria:
 
-*   **GIVEN** an attempt to insert a new patient record into the `Patients` table fails (e.g., due to database unavailability, data validation error, duplicate patient ID, network issue, or other system errors).
-*   **WHEN** the insertion failure occurs.
-*   **THEN** the system's global error handler catches the exception.
-*   **AND** the system logs the failure details, including the error message, timestamp, and relevant contextual information (e.g., patient ID if generated, error type).
-*   **AND** all sensitive data (e.g., `Insurance ID`, `SSN` if present in the original payload) is masked in the logs to comply with security requirements.
-*   **AND** an email notification is automatically sent to the configured Healthcare IT support group.
-*   **AND** the email contains sufficient details about the failure (e.g., error type, timestamp, patient identifier if available and safe to include, brief context) without exposing raw Protected Health Information (PHI).
+*   GIVEN the system attempts to insert a new patient record into the database
+*   WHEN the database insertion fails for any reason (e.g., database unavailability, data validation error, duplicate system-generated patient ID, network issue, constraint violation)
+*   THEN the system must log the failure event with relevant error details (e.g., timestamp, error message, attempted data excluding sensitive fields).
+*   AND the system must send an email notification to the designated Healthcare IT support group.
+*   AND the email notification must contain sufficient information to identify the failed transaction and the reason for failure.
+*   AND sensitive patient data (e.g., Insurance Policy Number, full patient name) must NOT be included in the email notification body or subject.
+*   AND the system must utilize a global error handler to catch and manage such exceptions consistently.
+
+---
+
+## User Story 4: Secure Data Handling for Patient Enrollment
+
+*   **As** the Healthcare Patient Management System,
+*   **I want to** secure patient enrollment data during transmission and processing,
+*   **So that** Protected Health Information (PHI) is safeguarded according to compliance standards.
+
+### Acceptance Criteria:
+
+*   GIVEN patient enrollment data contains PHI (e.g., patient name, DOB, address, insurance ID)
+*   WHEN the data is transmitted from the Patient Enrollment Portal to the API
+*   THEN all communication must occur over HTTPS with strong encryption.
+*   AND specific PHI fields within the payload must be encrypted by the source system before transmission.
+*   AND the API must validate the JWT token provided in the request header for every incoming request.
+*   AND database credentials used for patient record insertion must be securely stored (e.g., in a secret manager or vault, not hardcoded or in plain text configuration files).
+*   AND the system must ensure that decrypted PHI is only handled in memory for the shortest necessary duration and never persisted in an unencrypted state outside the secure database.
+
+---
+
+## User Story 5: Audit Logging for Patient Enrollment Process
+
+*   **As** the Healthcare Patient Management System,
+*   **I want to** log events related to patient enrollment processing,
+*   **So that** system activities can be audited and sensitive data remains protected in logs.
+
+### Acceptance Criteria:
+
+*   GIVEN the patient enrollment process is executed
+*   WHEN the system logs events (e.g., API request received, data transformation, database insertion attempt, success/failure)
+*   THEN the system must mask or redact sensitive data (e.g., Insurance Policy Number, SSN if present, full patient name, complete address) from all log entries.
+*   AND log entries must include essential contextual information such as a timestamp, event type, and a correlation ID for traceability.
+*   AND logs must be stored in a secure, centralized, and auditable logging system with appropriate access controls.
+*   AND the system must implement a consistent logging standard and format across the entire integration component.
