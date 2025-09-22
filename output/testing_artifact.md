@@ -1,365 +1,385 @@
-# Test Strategy & Plan: Patient Enrollment Portal
+# Test Strategy & Plan: Patient Enrollment Application
 
-**Version:** 1.0
-**Date:** October 26, 2023
+**Document Version:** 1.0  
+**Date:** October 26, 2023  
 **Author:** QA Automation Engineer
 
 ---
 
-## 1. Introduction
+## 1. Test Strategy
 
-### 1.1. Purpose
-This document outlines the comprehensive testing strategy for the Patient Enrollment Portal project. Its purpose is to define the scope, objectives, methodologies, and resources required to ensure the application meets the specified functional and non-functional requirements, delivering a high-quality, secure, and reliable product.
+### 1.1 Introduction
+This document outlines the comprehensive testing strategy for the Patient Enrollment Application. Its purpose is to define the scope, objectives, methodologies, and resources required to ensure the application meets the functional and non-functional requirements specified in the SRS and HLD. This strategy will guide all testing activities throughout the software development lifecycle (SDLC).
 
-### 1.2. Project Overview
-The Patient Enrollment Portal is a web application designed to streamline the patient enrollment process. It allows users to find information, register for an account, submit personal and medical details, upload documents, and track their application status. It also provides a backend interface for providers and administrators to manage and review these applications. The system prioritizes security, data privacy (HIPAA, GDPR/CCPA), performance, and accessibility.
+### 1.2 Scope of Testing
 
----
+#### 1.2.1 In Scope
+-   **Functional Testing:** End-to-end validation of all user stories (US1-US9) across the three epics:
+    -   **Patient Onboarding & Account Management:** Patient registration (email/phone), verification, multi-step form logic, data persistence, document uploads, and digital consent.
+    -   **Patient Experience & Support:** Patient dashboard, application status tracking, notifications, informational pages (FAQ, Privacy), site search, and support contact form.
+    -   **Provider & Admin Portal:** Secure login, dashboard functionality (sorting, filtering), application review workflow (approve, reject, request info), and Role-Based Access Control (RBAC) verification.
+-   **API Testing:** Validation of all RESTful API endpoints defined in the HLD for functionality, security, and performance. This includes testing authentication (JWT), data validation, error handling, and response codes.
+-   **Security Testing:**
+    -   Verification of security controls defined in US10, including RBAC, data encryption (in-transit and at-rest), input validation (to prevent XSS, SQLi), and secure headers (CSP).
+    -   Testing for session management vulnerabilities and access control flaws.
+-   **Performance Testing:**
+    -   Validating performance benchmarks from US11 (LCP < 2.5s, API response < 500ms).
+    -   Basic load testing to ensure the system performs under expected user load.
+-   **Accessibility Testing:**
+    -   Ensuring compliance with WCAG 2.2 Level AA standards as per US12, including keyboard-only navigation, screen reader compatibility, and color contrast ratios.
+-   **Compatibility Testing:**
+    -   **Cross-Browser:** Latest versions of Chrome, Firefox, Safari, and Edge.
+    -   **Cross-Device:** Validating responsiveness on Desktop, Tablet, and Mobile viewports.
+-   **Database Testing:** Verifying data integrity, encryption of sensitive PHI fields, and correctness of data mapping between the application and the PostgreSQL database.
+-   **BDD Generation Tool Testing:** Validating the functionality of the developer tool described in US13 to ensure it generates syntactically correct Gherkin feature files.
 
-## 2. Scope of Testing
+#### 1.2.2 Out of Scope
+-   Testing of third-party services themselves (e.g., AWS SES, Twilio), beyond verifying the integration points.
+-   Underlying cloud infrastructure performance and security testing.
+-   Exhaustive penetration testing (this will be conducted by a specialized third-party security team but will be based on findings from our internal security tests).
+-   Usability testing with real end-users (this is a separate activity owned by the product/UX team).
 
-### 2.1. In Scope
-The following features and aspects of the application are in scope for testing:
+### 1.3 Testing Objectives
+-   To validate that all functional requirements specified in the user stories are implemented correctly.
+-   To ensure the application is secure and compliant with HIPAA regulations, protecting all Patient Health Information (PHI).
+-   To verify that the application meets the defined non-functional requirements for performance, accessibility, and reliability.
+-   To identify, document, and track defects to resolution in a timely manner.
+-   To provide a high degree of confidence to stakeholders for a successful production release.
+-   To build a robust and maintainable regression suite to support future development and CI/CD.
 
-*   **Functional Testing:**
-    *   **Informational Pages & Support:** Home, FAQ, Search, Contact Us, Privacy Policy, and Terms of Service pages.
-    *   **Patient Registration & Onboarding:** Account creation, email/SMS verification, multi-step enrollment form, and digital consent.
-    *   **Document Management:** Secure file upload (validation of type/size), viewing, and deletion.
-    *   **Patient Dashboard & Communication:** Application status tracking and secure messaging.
-    *   **Provider/Admin Workflow:** Admin dashboard, application filtering/sorting, and application review/decision (approve/reject).
-*   **API Testing:** End-to-end testing of all RESTful API endpoints defined in the High-Level Design (HLD), including authentication, authorization (RBAC), data validation, and error handling.
-*   **Non-Functional Testing:**
-    *   **UI/UX & Responsiveness:** Verification of layout and functionality across desktop, tablet, and mobile viewports.
-    *   **Performance Testing:** Page load times (LCP) and API response times under normal and peak load conditions.
-    *   **Security Testing:** Verification of security controls including HTTPS, data encryption, role-based access, and checks for common vulnerabilities (OWASP Top 10).
-    *   **Accessibility Testing:** Compliance with WCAG 2.2 Level AA standards.
-    *   **Compliance Testing:** Verification of features supporting GDPR/CCPA (data export, data deletion) and HIPAA guidelines.
-*   **Cross-Browser Testing:** Testing on the latest versions of major browsers (Chrome, Firefox, Safari, Edge).
+### 1.4 Testing Types & Levels
+-   **Unit Testing:** Performed by developers to test individual functions and components in isolation.
+-   **Integration Testing:** Testing the interfaces and interactions between modules, such as API-to-database communication and frontend-to-API calls.
+-   **System (End-to-End) Testing:** Performed by the QA team on the fully integrated application to validate the complete user workflows. This includes:
+    -   **Functional & Regression Testing:** Validating new features and ensuring existing functionality is not broken.
+    -   **UI/UX Testing:** Manual and automated checks for visual consistency and responsiveness.
+    -   **Security Testing:** Verifying authentication, authorization, and data protection mechanisms.
+    -   **Performance Testing:** Measuring response times and stability under load.
+    -   **Accessibility Testing:** Automated and manual checks against WCAG 2.2 AA standards.
+-   **User Acceptance Testing (UAT):** Conducted by product owners and business stakeholders to confirm the application meets business requirements before release.
 
-### 2.2. Out of Scope
-*   Testing of third-party services (e.g., Email/SMS provider uptime, S3 object store infrastructure). We will only test the integration points.
-*   Underlying cloud infrastructure and network hardware testing.
-*   Live production environment performance/stress testing without explicit approval.
-*   Usability testing with a formal focus group (though UI/UX feedback will be provided).
+### 1.5 Test Automation Strategy
+A Behavior-Driven Development (BDD) approach will be central to our strategy. Gherkin feature files will serve as executable specifications.
 
----
+-   **Automation Pyramid:**
+    -   **UI/E2E Tests (10%):** Focus on critical user journeys (e.g., full patient registration and submission).
+    -   **API/Service Tests (30%):** Test business logic, security, and integration points at the API layer for speed and stability.
+    -   **Unit Tests (60%):** A strong foundation of unit tests written by developers.
 
-## 3. Quality Objectives
-*   **Defect Density:** Achieve zero critical or blocker defects in the production environment.
-*   **Test Coverage:** Attain a minimum of 90% code coverage for critical backend modules via unit and integration tests.
-*   **Requirement Coverage:** 100% of user stories and acceptance criteria covered by at least one test case (manual or automated).
-*   **Automation Pass Rate:** Maintain a >95% pass rate for the automated regression suite for any release candidate build.
-*   **Performance:** Ensure all pages meet the LCP target of < 2.5 seconds and API responses are < 500ms under expected load.
-*   **Accessibility:** Achieve 100% compliance with WCAG 2.2 AA standards as verified by automated tools and manual audit.
+-   **Tools and Frameworks:**
+    -   **Test Management:** Jira for tracking user stories, test cases, and defects.
+    -   **BDD Framework:** `pytest-bdd` (Python) to bind Gherkin feature files to test code, aligning with the backend tech stack.
+    -   **UI Automation:** **Playwright** with Python for its robust cross-browser capabilities, auto-waits, and speed.
+    -   **API Automation:** **`pytest`** with the **`httpx`** library for making asynchronous API requests, mirroring the FastAPI backend.
+    -   **Performance Testing:** **k6** or **JMeter** for load testing API endpoints. **Google Lighthouse** for frontend performance metrics.
+    -   **Accessibility Testing:** **Axe-core** integrated into the Playwright test suite for automated checks.
+    -   **CI/CD:** **GitHub Actions** to trigger automated test suites (API, UI regression) on every pull request and deployment.
+    -   **Reporting:** **Allure Report** integrated with `pytest` for detailed and interactive test execution reports.
 
----
+### 1.6 Test Environments
+-   **Development:** Local developer environments for coding and unit testing.
+-   **QA/Testing:** A stable, dedicated environment that is a close replica of production. All system, integration, and regression testing will be performed here.
+-   **Staging/Pre-Production:** An environment for UAT and final validation before deploying to production. Performance tests may also be run here.
+-   **Production:** The live environment. Smoke tests will be executed post-deployment.
 
-## 4. Testing Types & Levels
+### 1.7 Roles & Responsibilities
+-   **Developers:** Write unit tests, perform code reviews, fix bugs, and support QA in debugging.
+-   **QA Automation Engineer:** Design and execute the test strategy, create and maintain Gherkin feature files, develop and maintain automated test scripts (UI, API), report and track defects, and manage the test automation framework.
+-   **Product Owner:** Define acceptance criteria, participate in UAT, and prioritize defects.
+-   **DevOps Engineer:** Maintain the CI/CD pipeline and manage the test environments.
 
-| Testing Level      | Approach                                                                                                                                                                                            | Owner       |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **Unit Testing**   | Developers will write unit tests for individual functions and components in the FastAPI backend using `pytest`. Focus is on business logic in isolation.                                              | Developer   |
-| **Integration Testing** | Testing the interaction between different API modules, the database, and the object store. For example, verifying that a successful document upload API call correctly updates the database.           | Developer/QA |
-| **API Testing**    | A dedicated suite of automated tests will target the RESTful API endpoints directly. This will cover contract testing, validation, error responses, and security checks (RBAC).                       | QA Engineer |
-| **End-to-End (E2E) Testing** | UI-driven automated tests that simulate complete user journeys based on the BDD scenarios. Examples: full patient registration to submission, provider review to approval.                     | QA Engineer |
-| **UI & Responsiveness** | A combination of automated visual regression testing and manual checks across defined browser/device combinations to ensure a consistent and functional user experience.                           | QA Engineer |
-| **Security Testing** | Manual and automated checks for security vulnerabilities. Includes verifying authentication/authorization logic, data encryption, and secure handling of sensitive information.                        | QA Engineer |
-| **Performance Testing** | Load and stress testing on the API endpoints in a staging environment to measure response times, throughput, and system stability under load. Frontend performance metrics will be captured.        | QA Engineer |
-| **Accessibility Testing** | Automated scans using tools like Axe-core integrated into the E2E suite, followed by manual testing for keyboard navigation and screen reader compatibility.                               | QA Engineer |
-| **User Acceptance (UAT)** | The Product Owner and key stakeholders will perform testing in the staging environment to validate that the application meets business requirements before release.                                | Product Owner |
+### 1.8 Defect Management
+-   **Tool:** Jira
+-   **Workflow:** Defects will follow a standard lifecycle: `New` -> `In Analysis` -> `Ready for Development` -> `In Progress` -> `Ready for QA` -> `Done` / `Reopened`.
+-   **Severity Levels:**
+    -   **P1 - Blocker:** Prevents major functionality; no workaround exists.
+    -   **P2 - Critical:** A major feature is broken or fails frequently; a difficult workaround may exist.
+    -   **P3 - Major:** A feature is not working as expected but does not impact the entire system.
+    -   **P4 - Minor:** UI/cosmetic issue or a defect with an easy workaround.
 
----
+### 1.9 Entry & Exit Criteria
 
-## 5. Test Automation Approach
+#### 1.9.1 Entry Criteria (for System Testing)
+-   The build has been successfully deployed to the QA environment.
+-   All unit and integration tests have passed in the CI pipeline.
+-   The development team has provided release notes detailing the changes in the build.
+-   A smoke test on critical functionalities has passed.
 
-### 5.1. Framework & Tools
-
-| Area                | Tool / Framework                                   | Purpose                                                                                                 |
-| ------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **BDD / E2E Testing** | `Python` with `Playwright` and `pytest-bdd`        | For implementing Gherkin feature files to drive UI-based E2E tests in a readable and collaborative format. |
-| **API Testing**     | `Python` with `pytest` and `httpx`                 | For creating a fast, reliable, and maintainable suite of tests for the FastAPI backend.                 |
-| **Performance Testing** | `k6` (Grafana k6)                                  | For scripting realistic load tests to measure API performance and reliability.                          |
-| **Accessibility Testing** | `Axe-core` (via Playwright integration)            | To run automated accessibility audits within the E2E test suite.                                        |
-| **CI/CD**           | GitHub Actions / Jenkins                           | To automatically run the test suites (API, E2E) on every commit or pull request to the main branches.     |
-| **Defect Tracking** | Jira                                               | To log, track, and manage all identified defects through their lifecycle.                               |
-
-### 5.2. Automation Strategy
-*   **Test Pyramid Model:** We will follow the test pyramid principle, with a large base of fast unit tests, a smaller layer of integration/API tests, and a very selective set of UI E2E tests.
-*   **API-First Automation:** The majority of functional and regression testing will be performed at the API level. This is faster, more stable, and allows for earlier detection of bugs in the development cycle.
-*   **UI Automation for Key Journeys:** UI E2E tests will be reserved for validating critical user workflows, such as the complete patient enrollment process and the provider's application review process.
-*   **Continuous Integration:** All automated tests will be integrated into the CI/CD pipeline to provide rapid feedback to the development team. Builds will fail if critical tests do not pass.
-
----
-
-## 6. Test Environment
-
-| Environment | Purpose                                                                                                                                                                                              |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Development** | Used by developers for local development and unit testing.                                                                                                                                           |
-| **QA / Staging**  | A stable environment that mirrors production as closely as possible. All testing activities (Manual, Automated, Performance, UAT) will be conducted here. Deployed to automatically from the main branch. |
-| **Production**  | The live environment for end-users. Only stable, tested, and approved builds will be deployed. Limited smoke testing will be performed post-deployment.                                             |
-
----
-
-## 7. Defect Management
-
-All defects found during testing will be logged in Jira with the following information:
-*   **Title:** A clear, concise summary of the issue.
-*   **Description:** Detailed steps to reproduce, including test data used.
-*   **Expected vs. Actual Results.**
-*   **Environment:** (e.g., QA, Browser/Version, Device).
-*   **Severity:**
-    *   **Critical:** Blocks testing or major functionality; application crash.
-    *   **High:** Major loss of functionality or non-obvious workaround.
-    *   **Medium:** Minor loss of functionality or an easy workaround exists.
-    *   **Low:** Cosmetic issue, typo, or UI alignment problem.
-*   **Priority:** Determined by the Product Owner during triage.
-*   **Attachments:** Screenshots, videos, or logs.
+#### 1.9.2 Exit Criteria (for Release)
+-   All planned test cases have been executed.
+-   The automated regression suite has a pass rate of 100%.
+-   There are no open P1 (Blocker) or P2 (Critical) defects.
+-   All high-priority P3 defects are addressed or have a clear mitigation plan.
+-   UAT has been completed and signed off by the Product Owner.
+-   All testing documentation and reports are complete.
 
 ---
 
-## 8. Entry & Exit Criteria
+## 2. BDD Feature Files
 
-### 8.1. Entry Criteria (For starting a test cycle)
-*   The build has been successfully deployed to the QA environment.
-*   All relevant user stories are marked as "Dev Complete".
-*   Unit and integration tests are passing in the CI pipeline.
-*   A basic smoke test suite passes, confirming the application is stable.
+# User Story 1: Secure Patient Registration
+Feature: Patient Account Registration
+  As a prospective patient, I want to create a secure account so that I can begin the enrollment process.
 
-### 8.2. Exit Criteria (For release to production)
-*   All planned test cases have been executed.
-*   The automated regression suite has a pass rate of 100% for critical path tests and >95% overall.
-*   There are no open Critical or High severity defects.
-*   All Medium severity defects have been reviewed and approved for deferral by the Product Owner.
-*   All NFRs (Performance, Accessibility, etc.) have been met.
-*   UAT has been completed and signed off by the Product Owner.
+  Scenario: Successful registration using an email address
+    Given I am on the registration page
+    When I fill in the registration form with my name, a unique email, and a strong password
+    And I submit the form
+    Then I should see a message "Verification link sent to your email."
+    And the system should send a verification email to my address
+    When I follow the verification link from the email
+    Then my account should be verified
+    And I should be able to log in with my email and password
 
----
+  Scenario: Successful registration using a phone number
+    Given I am on the registration page
+    When I fill in the registration form with my name, a unique phone number, and a strong password
+    And I submit the form
+    Then I should see a message "Verification code sent to your phone."
+    And the system should send a verification code via SMS to my phone number
+    When I enter the received SMS code on the verification page
+    Then my account should be verified
+    And I should be able to log in with my phone number and password
 
-# BDD Feature Files
-
-Feature: Informational Pages and Support
-  This feature covers the public-facing informational content of the portal,
-  including the home page, FAQ, site search, support form, and legal pages.
-
-  Background:
-    Given I am a visitor on the Patient Enrollment Portal
-
-  Scenario: Viewing the Home Page and FAQ section
-    Given I navigate to the application's root URL
-    When the home page loads
-    Then I should see a welcoming message
-    And I should see a brief explanation of the program
-    And I should see a prominent button with the text "Start Enrollment" or "Register Now"
-    And the page should contain a clearly marked FAQ section
-    And the FAQ section should contain a list of questions
-
-  Scenario: FAQ items are expandable and collapsible
-    Given I am on the home page with the FAQ section visible
-    When I click on the first FAQ question
-    Then the answer for the first FAQ question should become visible
-    When I click on the first FAQ question again
-    Then the answer for the first FAQ question should be hidden
-
-  Scenario: Searching for help content with results
-    Given I am on the Home page
-    When I type "insurance" into the search bar and submit the search
-    Then I should be shown a list of search results
-    And each search result should be a clickable link
-    And the list should contain results related to "insurance"
-
-  Scenario: Searching for help content with no results
-    Given I am on the Home page
-    When I type "nonexistentquery123" into the search bar and submit the search
-    Then I should see the message "No results found for your search"
-
-  Scenario: Submitting the support contact form successfully
-    Given I navigate to the "Support" page
-    When I fill in the contact form with the following details:
-      | Field         | Value                     |
-      | Name          | John Doe                  |
-      | Email Address | john.doe@example.com      |
-      | Subject       | Inquiry about enrollment  |
-      | Message       | This is a test message.   |
-    And I submit the contact form
-    Then I should see the confirmation message "Thank you for your message. We will get back to you shortly."
-
-  Scenario Outline: Contact form validation
-    Given I am on the "Support" page
-    When I fill in the contact form but leave the "<field>" field empty
-    And I attempt to submit the form
-    Then I should see an error message indicating that the "<field>" is required
+  Scenario Outline: Registration fails with invalid or weak data
+    Given I am on the registration page
+    When I attempt to register with the following details:
+      | Field         | Value                 |
+      | Name          | <name>                |
+      | Email         | <email>               |
+      | Phone Number  | <phone>               |
+      | Password      | <password>            |
+      | Confirm Password | <confirm_password> |
+    Then I should see the error message "<error_message>"
 
     Examples:
-      | field         |
-      | Name          |
-      | Email Address |
-      | Subject       |
-      | Message       |
+      | name      | email               | phone      | password    | confirm_password | error_message                                   |
+      | "Jane Doe"| "invalid-email"     | "1234567890" | "StrongPass1!" | "StrongPass1!"   | "Please enter a valid email address."           |
+      | "Jane Doe"| "jane@example.com"  | "1234567890" | "weak"      | "weak"           | "Password must be at least 8 characters long."    |
+      | "Jane Doe"| "jane@example.com"  | "1234567890" | "StrongPass1!" | "WrongPass1!"    | "Passwords do not match."                       |
 
-  Scenario: Accessing legal pages from the footer
-    Given I am on any page of the application
-    When I look at the page footer
-    Then I should see a link with the text "Privacy Policy"
-    And I should see a link with the text "Terms of Service"
-    When I click the "Privacy Policy" link
-    Then I should be navigated to the Privacy Policy page
-    And the page content should be visible without requiring a login
+  Scenario: Attempt to register with an existing email
+    Given a patient with the email "existing.user@example.com" already exists
+    When I try to register with the email "existing.user@example.com"
+    Then I should see an error message "An account with this email already exists."
 
-Feature: Patient Registration and Onboarding
-  This feature covers the entire patient journey from creating an account
-  to completing the multi-step enrollment form and providing consent.
-
-  Scenario: Successful new patient registration and account verification
+  Scenario: Rate limiting is applied after multiple failed registration attempts
     Given I am on the registration page
-    When I enter a valid email "new.patient@example.com" and a strong password "ValidP@ssw0rd!"
-    And I check the box to accept the Terms of Service
-    And I submit the registration form
-    Then I should be redirected to the "Verify Your Account" page
-    And a 6-digit verification code should be sent to "new.patient@example.com"
-    When I enter the correct verification code
-    Then my account should be marked as "verified"
-    And I should be automatically logged in
-    And I should be redirected to the first step of the enrollment form
+    When I submit the registration form with invalid data 6 times within one minute from the same IP address
+    Then I should see a message "Too many registration attempts. Please try again later."
+    And my IP address should be temporarily blocked from making further registration attempts
 
-  Scenario Outline: Registration with invalid input
-    Given I am on the registration page
-    When I enter "<email>" as the email and "<password>" as the password
-    And I submit the registration form
-    Then I should see an error message stating "<error_message>"
+# User Story 2 & 3: Multi-Step Enrollment and Document Upload
+Feature: Multi-Step Enrollment Application and Document Upload
+  As a registered patient, I want to complete a multi-step form and upload documents to provide my information.
+
+  Scenario: A new patient completes the multi-step enrollment form successfully
+    Given I am a registered and logged-in patient
+    And I am on the first step of the enrollment form "Personal Details"
+    When I fill in the "Personal Details" with valid information
+    And I click "Save and Continue"
+    Then I should be on the "Medical History" step
+    And the progress indicator should show step 2 of 3 is active
+    When I fill in the "Medical History" with valid information
+    And I click "Save and Continue"
+    Then I should be on the "Insurance Information" step
+    When I fill in the "Insurance Information" with valid information
+    And I click "Save and Continue"
+    Then I should be on the "Document Upload" step
+
+  Scenario: A patient saves progress and returns later
+    Given I am a registered and logged-in patient
+    And I have completed the "Personal Details" step of the enrollment form
+    When I log out and log back in later
+    Then I should be taken to the "Medical History" step of the form
+    And my previously entered "Personal Details" should be saved
+
+  Scenario: A patient uploads required documents
+    Given I am on the "Document Upload" step
+    And I see a list of required documents: "ID proof", "Insurance card"
+    When I upload a valid "ID_Proof.pdf" file for "ID proof"
+    Then I should see a progress bar during the upload
+    And I should see "ID_Proof.pdf" listed as uploaded with an option to delete it
+    When I upload a valid "Insurance_Card.jpg" file for "Insurance card"
+    Then I should see "Insurance_Card.jpg" listed as uploaded
+
+  Scenario Outline: Attempt to upload an invalid document
+    Given I am on the "Document Upload" step
+    When I attempt to upload the file "<file_name>"
+    Then I should see the error message "<error_message>"
 
     Examples:
-      | email               | password      | error_message                          |
-      | invalid-email       | ValidP@ssw0rd! | Please enter a valid email address.    |
-      | valid@example.com   | short         | Password must meet strength requirements. |
+      | file_name              | error_message                                 |
+      | "large_file.pdf"       | "File size exceeds the 10MB limit."           |
+      | "unsupported_file.txt" | "File type not supported. Please use PDF, JPG, or PNG." |
+      | "infected_file.pdf"    | "A virus was detected in the file. Upload failed." |
 
-  Scenario: Entering an incorrect verification code
-    Given I have registered and am on the "Verify Your Account" page
-    When I enter an incorrect verification code "000000"
-    Then I should see an error message "The verification code is incorrect."
-    And I should remain on the verification page
+# User Story 4: Digital Consent Capture
+Feature: Digital Consent Capture
+  As a registered patient, I want to provide digital consent to finalize my application.
 
-  Scenario: Completing the multi-step enrollment form and saving progress
-    Given I am a logged-in, verified patient on the enrollment form
-    When I complete the "Personal Information" step with valid data
-    And I click the "Next" button
-    Then my progress should be saved
-    And I should be on the "Medical History" step
-    When I click the "Back" button
-    Then I should be on the "Personal Information" step
-
-  Scenario: Providing digital consent to submit the application
-    Given I have completed all steps of the enrollment form
-    And I am on the "Consent" step
-    Then the "Submit Application" button should be disabled
-    When I view the consent documents
-    And I check the mandatory box to provide my consent
-    Then the "Submit Application" button should be enabled
-    When I click the "Submit Application" button
+  Scenario: Patient provides consent via checkbox and submits the application
+    Given I have completed all enrollment form steps and document uploads
+    And I am on the "Consent" page
+    When I review the "Privacy Policy" and "Terms of Service"
+    And I check the box "I have read and agree to the terms."
+    And I click "Submit Application"
     Then my application should be submitted successfully
-    And I should be redirected to my dashboard
+    And a non-editable, timestamped copy of the consent should be stored with my application
 
-Feature: Document Management
-  This feature covers the secure upload and management of documents required for enrollment.
+  Scenario: Patient provides consent via digital signature
+    Given I am on the "Consent" page
+    When I draw my signature in the digital signature pad
+    And I click "Submit Application"
+    Then my application should be submitted successfully
+    And the system should log my consent with the date, time, and IP address
 
-  Scenario: Successfully uploading a valid document
-    Given I am a logged-in patient on the "Document Upload" step of the enrollment form
-    When I select a valid file "ID_Proof.pdf" of type "PDF" and size "1MB" to upload
-    Then a progress bar should be displayed during the upload
-    And upon successful upload, I should see "ID_Proof.pdf" in the list of my uploaded files
+  Scenario: Attempt to submit application without providing consent
+    Given I have completed all enrollment form steps and document uploads
+    And I am on the "Consent" page
+    When I click "Submit Application" without providing consent
+    Then the submission should fail
+    And I should see a message "You must provide consent to continue."
 
-  Scenario Outline: Attempting to upload an invalid document
-    Given I am a logged-in patient on the "Document Upload" step
-    When I attempt to upload a file with type "<file_type>" and size "<file_size>"
-    Then I should see an error message stating "<error_message>"
+# User Story 5: Patient Dashboard and Status Tracking
+Feature: Patient Dashboard and Application Status Tracking
+  As a patient, I want to view my application status and receive notifications.
 
-    Examples:
-      | file_type | file_size | error_message                                 |
-      | EXE       | 1MB       | Invalid file type. Please upload PDF, JPG, or PNG. |
-      | PDF       | 15MB      | File size exceeds the 10MB limit.             |
-
-  Scenario: Deleting a recently uploaded document before submission
-    Given I have successfully uploaded a file named "InsuranceCard.png"
-    And it is visible in my list of uploaded files
-    When I click the "Delete" icon next to "InsuranceCard.png"
-    Then the file "InsuranceCard.png" should be removed from the list
-
-Feature: Patient Dashboard and Communication
-  This feature covers the patient's experience after submitting their application,
-  including status tracking and secure messaging.
-
-  Scenario Outline: Viewing enrollment application status on the dashboard
-    Given I am a logged-in patient who has submitted my application
-    And my application status has been updated to "<status>" by an admin
+  Scenario Outline: Patient dashboard displays the correct application status
+    Given I am a logged-in patient who has submitted an application
+    And my application status is "<current_status>"
     When I navigate to my dashboard
-    Then I should see a clear visual indicator showing my application status is "<status>"
+    Then I should see my application status displayed as "<current_status>"
+    And I should see a read-only summary of my submitted information
 
     Examples:
-      | status      |
-      | Submitted   |
-      | In Review   |
-      | Approved    |
-      | Rejected    |
+      | current_status      |
+      | "Submitted"         |
+      | "In Review"         |
+      | "Approved"          |
+      | "Rejected"          |
 
-  Scenario: Sending and receiving a secure message
-    Given I am a logged-in patient on my dashboard
-    When I navigate to the "Messages" section
-    And I compose and send a new message to the provider
-    Then my sent message should appear in the conversation history
-    Given a provider has replied to my message
-    When I refresh the "Messages" section
-    Then I should see the new message from the provider in the conversation history
-
-Feature: Provider Workflow Management
-  This feature covers the provider/admin experience of managing and reviewing patient applications.
-
-  Scenario: Provider views and filters applications on the dashboard
-    Given I am logged in as a "provider"
-    And there are multiple patient applications in the system with different statuses
-    When I access my dashboard
-    Then I should see a list of patient applications
-    When I filter the list by status "Pending Review"
-    Then I should only see applications with the "Pending Review" status
-
-  Scenario: Provider approves a patient application
-    Given I am a logged-in "provider" on the application dashboard
-    When I click on a patient application that is "In Review"
-    Then I am taken to the detailed view of that application
-    And I can view the patient's submitted information and documents
-    When I click the "Approve" button
-    Then the application status should be updated to "Approved" system-wide
-    And the patient should receive a notification of the approval
-
-  Scenario: Provider rejects a patient application with a reason
-    Given I am a logged-in "provider" viewing a patient application
-    When I click the "Reject" button
-    Then I am required to enter a reason for the rejection
-    When I enter "Information provided was incomplete." as the reason and confirm
-    Then the application status should be updated to "Rejected"
-    And the patient should receive a notification of the rejection
-    And the patient should be able to see the rejection reason on their dashboard
-
-Feature: Non-Functional Requirements and Compliance
-  This feature covers testing for data privacy rights (GDPR/CCPA) and accessibility.
-
-  Scenario: Requesting a personal data export
+  Scenario: Patient dashboard displays a message when action is required
     Given I am a logged-in patient
-    When I navigate to my "Account Settings" page
-    And I go to the "Data & Privacy" section
-    And I click the "Request My Data" button and confirm
-    Then a process to compile my data should be initiated
-    And I should receive an email with a secure link to download my data in a JSON or CSV format
+    And my application status is "Action Required" with the reason "Please upload a clearer copy of your ID"
+    When I navigate to my dashboard
+    Then I should see my application status as "Action Required"
+    And I should see a message "Please upload a clearer copy of your ID"
 
-  Scenario: Requesting account and data deletion
-    Given I am a logged-in patient in the "Data & Privacy" section of my account
-    When I click the "Delete My Account" button
-    Then I should be presented with a warning about the irreversible nature of this action
-    When I re-authenticate by entering my current password
-    And I confirm the deletion
-    Then my account and personal data should be queued for deletion from the system
+  Scenario: Patient receives an email notification on status change
+    Given I am a patient with an application "In Review"
+    When an admin changes my application status to "Approved"
+    Then an email notification should be sent to my registered email address with the subject "Your Application Status has been Updated"
+    And the email body should state that my application has been approved
 
-  Scenario: Verifying key accessibility features on the home page
-    Given I am on the home page
-    Then all `<img>` elements should have a descriptive `alt` attribute
-    And all `<input>` and `<textarea>` elements should have an associated `<label>`
-    And I can navigate to all interactive elements, including links, buttons, and form fields, using only the "Tab" key
+# User Story 6 & 7: Informational Pages and Support
+Feature: Informational Pages, Search, and Support
+  As a user, I want to find information and contact support easily.
+
+  Scenario: A user searches the FAQ page
+    Given I am on the "FAQ" page
+    When I enter "insurance" into the search bar
+    Then I should see a list of relevant FAQ titles containing the word "insurance"
+    When I search for "insurnce" with a typo
+    Then I should still see relevant results for "insurance"
+
+  Scenario: A logged-in patient submits a support request
+    Given I am a logged-in patient with the name "John Doe" and email "john.doe@example.com"
+    When I navigate to the "Contact Us" page
+    Then the "Name" field should be pre-populated with "John Doe"
+    And the "Email Address" field should be pre-populated with "john.doe@example.com"
+    When I fill in the "Subject" and "Message" fields
+    And I submit the contact form
+    Then I should see a confirmation message on the screen
+    And I should receive a confirmation email with a ticket number
+
+# User Story 8 & 9: Provider and Admin Portal
+Feature: Provider and Admin Application Management
+  As a provider or admin, I want to manage patient enrollment applications efficiently.
+
+  Scenario: An admin logs in and filters the application list
+    Given I am an admin user
+    When I log in to the admin portal
+    And I navigate to the dashboard
+    Then I should see a table of patient applications
+    When I filter the list by status "Submitted"
+    Then I should only see applications with the "Submitted" status
+    When I sort the list by "Submission Date" in descending order
+    Then the most recent applications should appear at the top
+
+  Scenario: An admin user has access to settings not visible to a provider
+    Given I am logged in as an admin user
+    When I view the navigation menu
+    Then I should see a link to "System Settings"
+    When I log out and log in as a provider user
+    And I view the navigation menu
+    Then I should not see a link to "System Settings"
+
+  Scenario Outline: A provider makes a decision on an application
+    Given I am a provider logged into the portal
+    And I am viewing a patient application with status "In Review"
+    When I click the "<action>" button
+    And I provide the reason "<reason>"
+    And I confirm the action
+    Then the application status should be updated to "<new_status>"
+    And a notification should be sent to the patient with the reason
+    And an entry should be created in the audit log for this action
+
+    Examples:
+      | action                    | reason                                | new_status        |
+      | "Approve"                 | "All documents are verified."         | "Approved"        |
+      | "Reject"                  | "Does not meet eligibility criteria." | "Rejected"        |
+      | "Request More Information"| "The uploaded ID is not legible."     | "Action Required" |
+
+# User Story 10: System Security and Compliance
+Feature: System Security and Role-Based Access Control
+  As a system stakeholder, I want to ensure the application is secure and compliant.
+
+  Scenario: A patient cannot access another patient's data
+    Given patient "A" is logged in
+    And patient "B" has an application with ID "app-b-123"
+    When patient "A" attempts to access the API endpoint "/api/v1/enrollment/applications/app-b-123"
+    Then the request should be denied with a "403 Forbidden" status code
+
+  Scenario: An admin action on PHI is recorded in the audit log
+    Given an admin is logged in
+    And a patient application with ID "app-c-456" exists
+    When the admin views the details of application "app-c-456"
+    Then an audit log entry should be created with the following data:
+      | Field              | Value                         |
+      | user_id            | The admin's user ID           |
+      | action             | "VIEWED_PATIENT_APPLICATION"  |
+      | target_entity_type | "enrollment_application"      |
+      | target_entity_id   | "app-c-456"                   |
+
+# User Story 11 & 12: Performance and Accessibility
+Feature: Application Performance and Accessibility
+  As a user, I want a fast and accessible application experience.
+
+  Scenario: Key pages load within performance targets
+    Given I am a user with typical network conditions
+    When I navigate to the "Home" page
+    Then the Largest Contentful Paint (LCP) should be less than 2.5 seconds
+    When I log in as a patient and navigate to my "Dashboard"
+    Then the Largest Contentful Paint (LCP) should be less than 2.5 seconds
+
+  Scenario: A user can navigate the registration form using only the keyboard
+    Given I am on the registration page
+    When I press the "Tab" key
+    Then the focus should move to the "Name" input field
+    When I press the "Tab" key again
+    Then the focus should move to the "Email" input field
+    When I am focused on the "Submit" button and press "Enter"
+    Then the form should be submitted
+
+# User Story 13: BDD Feature File Generation
+Feature: BDD Feature File Generation Tool
+  As a QA Engineer or Developer, I want to generate BDD feature files from use cases.
+
+  Scenario: Generate a feature file for the patient registration use case
+    Given I am a developer in the project's command line interface
+    When I run the command "python manage.py generate_feature patient_registration"
+    Then a file named "patient_registration.feature" should be created
+    And the file should contain valid Gherkin syntax
+    And the file should include a scenario for "Successful registration using an email address"
+    And the file should include a scenario for "Attempt to register with an existing email"
